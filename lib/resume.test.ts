@@ -10,7 +10,7 @@ test("the real resume file parses into every section the site needs", () => {
   assert.equal(r.name, "Monish S");
   assert.equal(r.experience.length, 3);
   assert.equal(r.experience.filter((j) => j.now).length, 1);
-  assert.deepEqual(r.projects.map((p) => p.name), ["Gatekeeper", "CARESUM", "ReviewOp + FACET", "Cool Tools"]);
+  assert.deepEqual(r.projects.map((p) => p.name), ["Gatekeeper", "CARESUM", "ReviewOp + FACET", "Cool Tools", "Space7"]);
   assert.equal(r.projects[3].tools.length, 8);
   assert.ok(r.projects.every((p) => p.stack.length > 0 && p.paragraphs.length > 0));
   assert.equal(r.publication.authors.length, 4);

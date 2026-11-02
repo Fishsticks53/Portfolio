@@ -1,4 +1,4 @@
-// The four project demos. The server renders each one in its finished state; these effects replay
+// The five project demos. The server renders each one in its finished state; these effects replay
 // the story while a demo is on screen. All examples are synthetic and labelled as such on the page.
 import { $, qs, qsa, all, runStage, reducedMotion, type Disposer, type Wait } from "./util";
 import { initTools } from "./tools";
@@ -241,7 +241,41 @@ function reviewop(still: boolean): Disposer {
   };
 }
 
+/* Space7: invite acceptance, server membership check, then room connection */
+function space7(still: boolean): Disposer {
+  const messages = [el("s7Message1"), el("s7Message2"), el("s7Message3")];
+  const states = [el("s7Invite"), el("s7Verify"), el("s7Connected")];
+  const sync = el("s7Sync");
+  const reset = () => {
+    messages.forEach((message) => message.classList.add("waiting"));
+    states.forEach((state) => state.classList.remove("active"));
+    states[0].classList.add("active");
+    sync.classList.remove("active");
+  };
+  const finish = () => {
+    messages.forEach((message) => message.classList.remove("waiting"));
+    states.forEach((state) => state.classList.remove("active"));
+    states[2].classList.add("active");
+    sync.classList.remove("active");
+  };
+  return runStage(el("st-s7"), async (w) => {
+    reset();
+    await w(1200);
+    states[0].classList.remove("active");
+    states[1].classList.add("active");
+    await w(1400);
+    states[1].classList.remove("active");
+    states[2].classList.add("active");
+    sync.classList.add("active");
+    for (const message of messages) {
+      await w(550);
+      message.classList.remove("waiting");
+    }
+    await w(2200);
+  }, finish, still);
+}
+
 export function initStages(tools: Tool[]): Disposer {
   const still = reducedMotion();
-  return all(gatekeeper(still), caresum(still), reviewop(still), initTools(tools, still));
+  return all(gatekeeper(still), caresum(still), reviewop(still), space7(still), initTools(tools, still));
 }

@@ -1,4 +1,4 @@
-// Server-rendered frames for the four project demos. They show each demo's finished state;
+// Server-rendered frames for the five project demos. They show each demo's finished state;
 // lib/fx/stages.ts replays the story while a demo is on screen. Examples are synthetic.
 import type { CSSProperties, ReactNode } from "react";
 import type { Tool } from "@/lib/resume";
@@ -90,10 +90,66 @@ function CoolTools({ tools }: { tools: Tool[] }) {
   );
 }
 
+function Space7() {
+  return (
+    <Stage id="s7" label="Space7 mobile app" say="Membership checked. You’re in." prop="clip" mood="focus">
+      <div className="s7-phones">
+        <div className="s7-phone" role="group" aria-label="Space7 invite on a phone">
+          <div className="s7-screen">
+            <div className="s7-statusbar"><b>9:41</b><span className="s7-signal"><i /><i /><i /></span></div>
+            <div className="s7-appbar"><b className="s7-wordmark">space7</b><span className="s7-menu" aria-hidden="true" /></div>
+            <div className="s7-joinflow">
+              <div className="s7-state" id="s7Invite">
+                <span className="s7-emblem">S7</span>
+                <span className="s7-eyebrow">SPACE INVITE</span>
+                <h4>Design circle</h4>
+                <p>Maya invited you to join this space.</p>
+                <span className="s7-join">Join space</span>
+                <small>Shared by invite link</small>
+              </div>
+              <div className="s7-state" id="s7Verify">
+                <span className="s7-verify-mark"><i /></span>
+                <span className="s7-eyebrow">SECURE JOIN</span>
+                <h4>Checking membership</h4>
+                <p>Verifying your access before connecting to chat.</p>
+                <span className="s7-verify-line"><i /></span>
+              </div>
+              <div className="s7-state active" id="s7Connected">
+                <span className="s7-verify-mark ok"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8" /></svg></span>
+                <span className="s7-eyebrow">SPACE7</span>
+                <h4>You’re in</h4>
+                <p>Membership verified. The chat is ready.</p>
+                <span className="s7-join">Open chat</span>
+              </div>
+            </div>
+            <div className="s7-home" />
+          </div>
+        </div>
+        <div className="s7-sync" id="s7Sync" aria-hidden="true"><i /></div>
+        <div className="s7-phone" role="group" aria-label="Space7 live chat on a second phone">
+          <div className="s7-screen">
+            <div className="s7-statusbar"><b>9:41</b><span className="s7-signal"><i /><i /><i /></span></div>
+            <div className="s7-appbar"><i className="s7-back" /><span className="s7-room-mark">D</span><div><b>Design circle</b><small>Space7</small></div><span className="s7-more" aria-hidden="true"><i /><i /><i /></span></div>
+            <div className="s7-thread">
+              <span className="s7-day">TODAY</span>
+              <div className="s7-message" id="s7Message1"><span className="s7-name">Maya</span><p>Welcome to the space!</p></div>
+              <div className="s7-message out" id="s7Message2"><span className="s7-name">You</span><p>Thanks! Happy to be here.</p></div>
+              <div className="s7-message" id="s7Message3"><span className="s7-name">Maya</span><p>Great to have you with us.</p></div>
+            </div>
+            <div className="s7-composer"><span>Message the space</span><i /></div>
+            <div className="s7-home" />
+          </div>
+        </div>
+      </div>
+    </Stage>
+  );
+}
+
 /** Which demo belongs to which project (matched by project name), and whether it sits on the left. */
 export const STAGES: Record<string, { flip: boolean; render: (tools: Tool[]) => ReactNode }> = {
   Gatekeeper: { flip: false, render: () => <Gatekeeper /> },
   CARESUM: { flip: true, render: () => <Caresum /> },
   "ReviewOp + FACET": { flip: false, render: () => <Reviewop /> },
   "Cool Tools": { flip: true, render: (tools) => <CoolTools tools={tools} /> },
+  Space7: { flip: false, render: () => <Space7 /> },
 };

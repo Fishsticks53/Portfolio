@@ -6,22 +6,23 @@ export function initPage(email: string): Disposer {
   const still = reducedMotion();
   const ds: Disposer[] = [];
 
-  /* cursor glow: eased follow, transform only */
+  /* Cursor glow: run frames only while the pointer is moving. */
   const glow = $("glow");
   let tx = innerWidth * 0.62, ty = innerHeight * 0.28, x = tx, y = ty, raf = 0;
   glow.style.transform = `translate3d(${x}px,${y}px,0)`;
-  if (!still) {
-    ds.push(listen(window, "pointermove", (e) => {
-      tx = (e as PointerEvent).clientX;
-      ty = (e as PointerEvent).clientY;
-    }, { passive: true }));
-    const loop = () => {
+  if (!still && matchMedia("(hover:hover) and (pointer:fine)").matches) {
+    const follow = () => {
+      raf = 0;
       x += (tx - x) * 0.07;
       y += (ty - y) * 0.07;
       glow.style.transform = `translate3d(${x}px,${y}px,0)`;
-      raf = requestAnimationFrame(loop);
+      if (Math.abs(tx - x) + Math.abs(ty - y) > 0.5) raf = requestAnimationFrame(follow);
     };
-    raf = requestAnimationFrame(loop);
+    ds.push(listen(window, "pointermove", (e) => {
+      tx = (e as PointerEvent).clientX;
+      ty = (e as PointerEvent).clientY;
+      if (!raf) raf = requestAnimationFrame(follow);
+    }, { passive: true }));
   }
   ds.push(() => cancelAnimationFrame(raf));
 

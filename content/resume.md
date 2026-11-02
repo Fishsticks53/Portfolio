@@ -70,6 +70,13 @@ Eight local-first utilities for common development tasks, built with FastAPI, Re
 - WorkspacePilot | Saves a project’s terminal commands and opens them together.
 - SyncPilot | Updates followed Git repositories safely, then runs their setup or rebuild commands.
 
+### Space7 | Real-time community chat app | Feb 2026 – Apr 2026
+stack: React Native, TypeScript, Socket.IO, Node.js
+Moved the cross-platform mobile app from Expo to bare React Native CLI and built 14 screens, including real-time chat, invite-link joining, search, notifications, profile editing and password reset.
+Built real-time messaging over Socket.IO, with server-side membership checks before a user can join a space’s chat room.
+Fixed backend security flaws involving unauthorized reads of private spaces, impersonated messages, deletes across spaces and exposed user emails. Each fix is covered by a regression test.
+Set up GitHub Actions CI to run lint, type checks, 31 unit tests across the app and backend, and Android builds on every push and pull request.
+
 ## Publication
 
 ### CARESUM: A Verification-Driven Framework for Clinical Dialogue Summarization with an Intelligent Chatbot Interface | IConSCEPT

@@ -12,7 +12,7 @@ export function Research({ r }: { r: Resume }) {
   return (
     <section id="writing">
       <div className="sh">
-        <h2 data-perch>Research &amp; <span className="serif">study</span></h2>
+        <h2 data-perch>Research <span className="serif">Papers</span></h2>
         <span className="kick">{pub.shortVenue} {pub.year}</span>
       </div>
       <div className="rs" id="rs">

@@ -7,9 +7,9 @@ export function Header({ r }: { r: Resume }) {
       <div className="wrap nav">
         <a className="brand" href="#top">{r.name}</a>
         <ul>
-          <li><a href="#work" data-react="curious">Work</a></li>
+          <li><a href="#work" data-react="curious">Projects</a></li>
           <li><a href="#experience" data-react="curious">Experience</a></li>
-          <li><a href="#writing" data-react="curious">Research</a></li>
+          <li><a href="#writing" data-react="curious">Research Papers</a></li>
           <li><a href="#contact" data-react="curious">Contact</a></li>
         </ul>
         <a className="btn" href={asset(r.resumeFile)} download>Resume</a>

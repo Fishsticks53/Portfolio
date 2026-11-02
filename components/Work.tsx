@@ -6,7 +6,7 @@ export function Work({ r }: { r: Resume }) {
   return (
     <section id="work">
       <div className="sh">
-        <h2 data-perch>Selected <span className="serif">work</span></h2>
+        <h2 data-perch>Projects</h2>
         <span className="kick">2025 – present · each demo uses an illustrative example</span>
       </div>
       <div id="feats">
@@ -17,7 +17,9 @@ export function Work({ r }: { r: Resume }) {
               <div className="copy">
                 <h3>{p.name}</h3>
                 <p className="tag">{p.tagline} · {p.dates}</p>
-                {p.paragraphs.map((t) => <p key={t}>{t}</p>)}
+                <ul className="project-points">
+                  {p.paragraphs.map((t) => <li key={t}>{t}</li>)}
+                </ul>
                 <div className="chips">
                   {p.tools.length
                     ? p.tools.map((t) => <span key={t.name} data-tool-chip data-react="think">{t.name}</span>)

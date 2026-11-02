@@ -6,8 +6,6 @@ import { $, qs, qsa, listen, all, clamp, reducedMotion, type Disposer } from "./
 const FEET = 0.925;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const cw = () => document.documentElement.clientWidth;
-const sz = () => (innerWidth < 600 ? 56 : 72);
 const LINES = ["Hello. Observing.", "Everything looks stable.", "Take your time.", "Noted.", "Quiet is a feature.", "All systems nominal."];
 const BUG = '<svg viewBox="0 0 22 22" aria-hidden="true"><g class="legs" stroke="#ff7a8a" stroke-width="1.4" stroke-linecap="round"><path d="M6 9L2 7M6 12H1M6 15L2 18M16 9l4-2M16 12h5M16 15l4 3"/></g><ellipse cx="11" cy="13" rx="5" ry="6.5" fill="#ff7a8a"/><circle cx="11" cy="6" r="3" fill="#ff7a8a"/><path d="M9.5 3.5L8 1M12.5 3.5L14 1" stroke="#ff7a8a" stroke-width="1.2" stroke-linecap="round"/><path d="M11 8v10" stroke="#0a0b10" stroke-width="1" opacity=".5"/></svg>';
 
@@ -17,9 +15,12 @@ type Bug = { el: HTMLElement; x: number; y: number; a: number };
 
 export function initPip(): Disposer {
   const still = reducedMotion();
+  if (matchMedia("(hover:none) and (pointer:coarse)").matches) return () => {};
   const pip = $("pip"), pf = qs("button.pip-f", pip), pbd = qs(".pip-b", pip), pbub = $("pbub");
   const pl = $("pl"), pr = $("pr");
   const ds: Disposer[] = [];
+  let vw = document.documentElement.clientWidth, vh = innerHeight, geometryDirty = true;
+  const perches = qsa<HTMLElement>("[data-perch]");
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const later = (fn: () => void, ms: number) => {
     const t = setTimeout(() => {
@@ -36,29 +37,47 @@ export function initPip(): Disposer {
     reactEl: null as Element | null, mouse: { x: 0, y: 0, t: -1e9 }, input: now0, nextAct: now0 + 3000, startle: 0, sy: scrollY, st: now0, until: 0,
     eye: { x: 0, y: 0 }, said: new Set<Element>(), last: now0,
   };
+  const geometry = new Map<Element, DOMRect>();
+  const refreshGeometry = () => {
+    if (!geometryDirty) return;
+    geometry.clear();
+    perches.forEach((el) => geometry.set(el, el.getBoundingClientRect()));
+    if (P.reactEl && !geometry.has(P.reactEl)) geometry.set(P.reactEl, P.reactEl.getBoundingClientRect());
+    geometryDirty = false;
+  };
+  const bounds = (el: Element) => {
+    refreshGeometry();
+    let r = geometry.get(el);
+    if (!r) {
+      r = el.getBoundingClientRect();
+      geometry.set(el, r);
+    }
+    return r;
+  };
   let bug: Bug | null = null;
   let lastBug: Pt = { x: 0, y: 0 };
   let sayTimer: ReturnType<typeof setTimeout> | undefined;
   let reactTimer: ReturnType<typeof setTimeout> | undefined;
   let raf = 0;
 
-  const floorPt = (): Pt => ({ x: cw() - sz() * 0.9, y: innerHeight - 14 });
+  const sz = () => (vw < 600 ? 56 : 72);
+  const floorPt = (): Pt => ({ x: vw - sz() * 0.9, y: vh - 14 });
   const perchPt = (el: Element, f: number): Pt => {
-    const r = el.getBoundingClientRect(), s = sz();
-    return { x: clamp(r.left + r.width * f, s * 0.6, cw() - s * 0.6), y: r.top };
+    const r = bounds(el), s = sz();
+    return { x: clamp(r.left + r.width * f, s * 0.6, vw - s * 0.6), y: r.top };
   };
   const okEl = (el: Element) => {
-    const r = el.getBoundingClientRect();
-    return r.width > 30 && r.top > sz() + 72 && r.top < innerHeight - 26;
+    const r = bounds(el);
+    return r.width > 30 && r.top > sz() + 72 && r.top < vh - 26;
   };
   function pickPerch(avoid: Element | null): HTMLElement | null {
-    const c = qsa("[data-perch]").filter((e) => e !== avoid && okEl(e));
+    const c = perches.filter((e) => e !== avoid && okEl(e));
     if (!c.length) return null;
     const w = c.map((e) => {
-      const r = e.getBoundingClientRect();
+      const r = bounds(e);
       let k = e.classList.contains("stage") ? 2.6 : 1;
       k *= 0.4 + Math.min(1.6, Math.abs(r.top - P.y) / 220);
-      k *= 1 - Math.abs(r.top / innerHeight - 0.45) * 0.6;
+      k *= 1 - Math.abs(r.top / vh - 0.45) * 0.6;
       return Math.max(0.05, k);
     });
     let t = Math.random() * w.reduce((a, b) => a + b, 0), i = 0;
@@ -70,7 +89,7 @@ export function initPip(): Disposer {
   }
   function say(text: string, ms = 2800) {
     pbub.textContent = text;
-    pbub.className = "pbub " + (P.x < 150 ? "al" : P.x > cw() - 150 ? "ar" : "") + " show";
+    pbub.className = "pbub " + (P.x < 150 ? "al" : P.x > vw - 150 ? "ar" : "") + " show";
     clearTimeout(sayTimer);
     sayTimer = setTimeout(() => pbub.classList.remove("show"), ms);
   }
@@ -173,7 +192,7 @@ export function initPip(): Disposer {
       hunt();
       return;
     }
-    const r = el.getBoundingClientRect();
+    const r = bounds(el);
     if (P.walk) {
       const d = P.fT - P.f, sp = (dt / 1000) * 95 / Math.max(60, r.width);
       P.f += Math.sign(d) * Math.min(Math.abs(d), sp);
@@ -222,6 +241,7 @@ export function initPip(): Disposer {
     }
   };
   const place = () => {
+    refreshGeometry();
     if (!P.perch || !okEl(P.perch)) P.perch = pickPerch(null);
     const T = P.perch ? perchPt(P.perch, P.f) : floorPt();
     P.x = T.x;
@@ -257,7 +277,7 @@ export function initPip(): Disposer {
     el.setAttribute("aria-label", "Squash the bug");
     el.innerHTML = BUG;
     document.body.append(el);
-    bug = { el, x: 140 + Math.random() * (innerWidth - 280), y: 170 + Math.random() * (innerHeight - 340), a: Math.random() * 6.283 };
+    bug = { el, x: 140 + Math.random() * (vw - 280), y: 170 + Math.random() * (vh - 340), a: Math.random() * 6.283 };
     el.addEventListener("click", () => catchBug(true));
   }
   function crawl(dt: number) {
@@ -266,10 +286,10 @@ export function initPip(): Disposer {
     const v = (34 * dt) / 1000;
     bug.x += Math.cos(bug.a) * v;
     bug.y += Math.sin(bug.a) * v;
-    if (bug.x < 90 || bug.x > innerWidth - 90) bug.a = Math.PI - bug.a;
-    if (bug.y < 150 || bug.y > innerHeight - 90) bug.a = -bug.a;
-    bug.x = clamp(bug.x, 80, innerWidth - 80);
-    bug.y = clamp(bug.y, 140, innerHeight - 80);
+    if (bug.x < 90 || bug.x > vw - 90) bug.a = Math.PI - bug.a;
+    if (bug.y < 150 || bug.y > vh - 90) bug.a = -bug.a;
+    bug.x = clamp(bug.x, 80, vw - 80);
+    bug.y = clamp(bug.y, 140, vh - 80);
     bug.el.style.transform = `translate3d(${bug.x - 11}px,${bug.y - 11}px,0) rotate(${bug.a + 1.57}rad)`;
   }
 
@@ -280,7 +300,7 @@ export function initPip(): Disposer {
       tx = P.x;
       ty = P.y;
     } else if (P.reactEl) {
-      const r = P.reactEl.getBoundingClientRect();
+      const r = bounds(P.reactEl);
       tx = r.left + r.width / 2;
       ty = r.top + r.height / 2;
     } else if (bug) {
@@ -290,7 +310,7 @@ export function initPip(): Disposer {
       tx = P.mouse.x;
       ty = P.mouse.y;
     } else if (P.perch?.classList.contains("stage")) {
-      const r = P.perch.getBoundingClientRect();
+      const r = bounds(P.perch);
       tx = r.left + r.width * (0.3 + 0.4 * Math.sin(now / 900));
       ty = r.top + r.height * 0.5;
     } else {
@@ -332,6 +352,7 @@ export function initPip(): Disposer {
       P.last = now;
       return;
     }
+    refreshGeometry();
     const dt = Math.min(50, now - P.last);
     P.last = now;
     crawl(dt);
@@ -368,6 +389,7 @@ export function initPip(): Disposer {
     poke();
   }, { passive: true }));
   ds.push(listen(window, "scroll", () => {
+    geometryDirty = true;
     const n = performance.now(), v = Math.abs(scrollY - P.sy) / Math.max(1, n - P.st);
     P.sy = scrollY;
     P.st = n;
@@ -383,6 +405,7 @@ export function initPip(): Disposer {
     const el = (e.target as Element | null)?.closest?.("[data-react]") as HTMLElement | null;
     if (el && el !== P.reactEl) {
       P.reactEl = el;
+      geometryDirty = true;
       setMood(el.dataset.react!, 1400);
       clearTimeout(reactTimer);
       reactTimer = setTimeout(() => (P.reactEl = null), 1400);
@@ -399,7 +422,17 @@ export function initPip(): Disposer {
     if (!still) pf.animate([{ transform: "translateY(0)" }, { transform: "translateY(-22px)" }, { transform: "translateY(0)" }], { duration: 420, easing: "cubic-bezier(.23,1,.32,1)" });
     say("Checked.");
   }));
-  if (still) ds.push(listen(window, "resize", place));
+  ds.push(listen(window, "resize", () => {
+    vw = document.documentElement.clientWidth;
+    vh = innerHeight;
+    geometryDirty = true;
+    if (still) place();
+  }));
+  ds.push(listen(document, "transitionend", () => { geometryDirty = true; }, { capture: true }));
+  const mutations = new MutationObserver(() => { geometryDirty = true; });
+  perches.forEach((el) => mutations.observe(el, { subtree: true, childList: true, characterData: true }));
+  ds.push(() => mutations.disconnect());
+  document.fonts?.ready.then(() => { geometryDirty = true; });
 
   /* start */
   P.perch = document.querySelector<HTMLElement>(".cta .btn.pri");
